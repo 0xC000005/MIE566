@@ -109,7 +109,7 @@ def calculate_utility(actions: list[int], price_changes: list[int]) -> int:
     return sum(utility)
 
 
-# test every possible price change with every possible actions
+# test every possible price change with every possible action
 
 # create table utility_table with columns: price_change1, price_change2, action1, action2, action3, expert1, expert2, utility
 utility_table = pd.DataFrame(
@@ -131,13 +131,29 @@ for price_change1 in [-1, 1]:
                                   calculate_utility(actions, price_changes) - expert1 * 0.3 - expert2 * 0.3]],
                                 columns=['price_change1', 'price_change2', 'action1', 'action2', 'action3', 'expert1',
                                          'expert2', 'utility'])
-                            utility_table = pd.concat([utility_table, row_to_insert])
+                            utility_table = pd.concat([utility_table, row_to_insert], ignore_index=True)
 
 # # test cases
 # actions = [-1, 0, 1]
 # price_changes = [-1, -1]
 #
 # print(calculate_utility(actions, price_changes))  # 0
+
+
+# add one column non negative utility to the table, which is the utility + the minimum utility to raise the minimum to 0
+utility_table['non negative utility'] = utility_table['utility'] - utility_table['utility'].min()
+
+
+
+
+
+# add one column to the table, the normalized utility between 0 and 1
+utility_table['normalized_utility'] = (utility_table['non negative utility'] - utility_table['non negative utility'].min()) / (
+        utility_table['non negative utility'].max() - utility_table['non negative utility'].min())
+
+
+# add one column "risk-adverse utility" to the table, which is x^2 of the utility
+utility_table['risk-adverse utility'] = utility_table['normalized_utility'] ** 2
 
 # print the table in markdown
 print(utility_table.to_markdown())
